@@ -3,6 +3,7 @@ const Transaction = require("../models/transactionModel");
 const Transfer = require("../models/transferModel");
 const User = require("../models/userModel");
 const Withdrawal = require("../models/withdrawalModel");
+const deleteBillTransaction = require("../models/deleteBillTransactionModel");
 const { getUserBalance } = require("../utilities/helpers");
 
 //all merchants
@@ -15,6 +16,7 @@ const getAnalytics = async (req, res) => {
     const allUsersTotal = await User.find();
     const allMerchantsTotal = await Merchant.find();
     const payments = await Transaction.find();
+    const deletedBillTransaction = await deleteBillTransaction.find();
     let totalPayed = 0;
     payments.forEach((p) => (totalPayed = totalPayed + parseInt(p.amount)));
     const withdrawals = await Withdrawal.find({ status: "Complete" });
@@ -38,13 +40,14 @@ const getAnalytics = async (req, res) => {
 
     res.status(200).json(data);
   } catch (error) {
-    console.log(error);
+    /*console.log(error);*/
     res.status(400).json(error.message);
   }
 };
 
 const merchantSpecificData = async (req, res) => {
   const id = req.params.id;
+  /*console.log("id", id);*/
 
   //name , phone , email , status
   //total withdrawn , total transacted , total transfers in , total transafers out ,balance
@@ -62,6 +65,8 @@ const merchantSpecificData = async (req, res) => {
     const payments = await Transaction.find({ merchant: merchant._id });
     let totalPayed = 0;
     payments.forEach((p) => (totalPayed = totalPayed + parseInt(p.amount)));
+
+    //withdrawals
     const withdrawals = await Withdrawal.find({
       status: "Complete",
       merchant: merchant._id,
@@ -71,7 +76,21 @@ const merchantSpecificData = async (req, res) => {
       (w) => (totalWithdrawn = totalWithdrawn + parseInt(w.amount))
     );
 
-    const balance = await getUserBalance(merchant._id);
+    //delete merchnt bill: reverses active dedcutions and reflect in balance.
+    const deletedBillTransactions = await deleteBillTransaction.find({
+      merchant: merchant._id
+    });
+
+    //console.log("deleted bill transactions:", deletedBillTransactions)
+    const deletedBillTransactionsAmount = deletedBillTransactions.map((item)=>{
+      return item.activeDeductions
+    }).reduce((a,b)=>{
+      return parseInt(a)+ parseInt(b)
+    },0)
+
+    //console.log("deleted bill transactions amount:", deletedBillTransactionsAmount)
+
+    const balance = await getUserBalance(merchant._id) + deletedBillTransactionsAmount;
 
     let transfer_sent = 0;
     let transfer_received = 0;
@@ -104,7 +123,7 @@ const merchantSpecificData = async (req, res) => {
       transfers_in: transfer_received,
     });
   } catch (error) {
-    console.log(error);
+    /*console.log(error);*/
     res.json(error.message);
   }
 };

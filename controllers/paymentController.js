@@ -71,10 +71,10 @@ const stkpush = async (req, res) => {
     );
 
     //if push successfull
-    console.log(resp.data);
+    //console.log(resp.data);
     res.status(200).json(resp.data);
   } catch (error) {
-    console.log(error.message);
+    //console.log(error.message);
     res.status(400).json(error.message);
   }
 };
@@ -83,7 +83,7 @@ const handleStkCallback = async (req, res) => {
   const merchantAccountNo = req.query.merchant_code;
 
   if (!req.body.Body.stkCallback.CallbackMetadata) {
-    console.log(req.body.Body.stkCallback.ResultDesc);
+    //console.log(req.body.Body.stkCallback.ResultDesc);
     // sendSms(req.body.Body.stkCallback.ResultDesc, "0768793923");
     res.status(200).json("ok");
     return;

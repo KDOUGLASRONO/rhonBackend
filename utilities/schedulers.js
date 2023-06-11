@@ -3,9 +3,9 @@ const { deductBillSaving } = require("./jobs");
 
 const timezone = "Africa/Nairobi";
 
-// "*/2 * * * *",
+// "*/ * * * *",
 const deductBillSavingJob = cron.schedule(
-  "0 0 * * *",
+  "*/30 * * * *",
   async () => {
     try {
       await deductBillSaving();

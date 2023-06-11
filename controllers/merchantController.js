@@ -9,7 +9,14 @@ const {
 } = require("../utilities/helpers");
 
 const requestAccountCreation = async (req, res) => {
-  const { email, phone, business_name, location } = req.body;
+  const { firstName, lastName, email, phone, business_name, location, password } = req.body;
+
+  if(!(firstName && lastName && business_name && location && password)){
+    //console.log("all fields are required")
+    return res.status(400).json("all fields are required");
+  }
+  
+  //console.log("req.body", req.body)
 
   //validate phone
   if (!phone) {
@@ -52,12 +59,14 @@ const requestAccountCreation = async (req, res) => {
 
   //generate password and hash it
   try {
-    const password = generateCode(7);
+    /*const password = generateCode(7)*/;
     const hashedpass = await bcrypt.hash(password, 10);
 
     const account_number = generate4digitCode();
 
     const merchant = new Merchant({
+      firstName:firstName,
+      lastName:lastName,
       email: email || null,
       phone: phone,
       business_name: business_name,
@@ -65,6 +74,7 @@ const requestAccountCreation = async (req, res) => {
       password: hashedpass,
       location: location,
     });
+    //console.log("merchant", merchant)
 
     const newMerchant = await merchant.save();
 
@@ -80,23 +90,26 @@ const requestAccountCreation = async (req, res) => {
 
 const approveMerchantAccount = async (req, res) => {
   const id = req.params.id;
+  //console.log("put params: " + req.params.id);
 
   try {
     const existingMerchant = await Merchant.findById(id);
+    //console.log("merchnat found: ", existingMerchant)
     // console.log(existingMerchant);
     if (!existingMerchant) {
+      //console.log("merchant not found")
       throw new Error("Merchant not found");
     }
     if (existingMerchant.isApproved) {
       throw new Error("Merchant account is already approved");
     }
 
-    const password = generateCode(7);
-    const hashedpass = await bcrypt.hash(password, 10);
+    //const password = generateCode(7);
+    //const hashedpass = await bcrypt.hash(password, 10);
 
     const updatedMerchant = await Merchant.findByIdAndUpdate(
       id,
-      { isApproved: true, password: hashedpass },
+      { isApproved: true },
       { new: true }
     );
 
@@ -113,14 +126,16 @@ const approveMerchantAccount = async (req, res) => {
 };
 
 const merchantLogin = (req, res) => {
-  const { email, password, phone } = req.body;
+  const { email, password} = req.body;
 
-  if (email) {
-    //handle email login
-    Merchant.findOne({ email: email })
+  //console.log("logins data: "+ req.body);
+
+    //handle login
+    try{
+    Merchant.findOne({$or:[{ email: email },{phone:email}]})
       .then((user) => {
         if (user == null) {
-          res.status(400).json({ message: "user not found" });
+          res.status(400).json({ message: "merchant not found" });
         } else {
           bcrypt
             .compare(password, user.password)
@@ -152,49 +167,14 @@ const merchantLogin = (req, res) => {
       .catch((err) => {
         res.json(err.message);
       });
-  } else if (phone) {
-    //handle phone login
-    Merchant.findOne({ phone: phone })
-      .then((user) => {
-        if (user == null) {
-          res.status(400).json({ message: "user not found" });
-        } else {
-          bcrypt
-            .compare(password, user.password)
-            .then((result) => {
-              if (result == true) {
-                const token = jwt.sign(
-                  { id: user._id },
-                  process.env.JWT_SECRET,
-                  {
-                    expiresIn: "1d",
-                  }
-                );
-                res.status(200).json({
-                  _id: user._id,
-                  email: user.email,
-                  phone: user.phone,
-                  account_number: user.account_number,
-                  token: token,
-                });
-              } else {
-                res.status(400).json("invalid password");
-              }
-            })
-            .catch((error) => {
-              res.json(error.message);
-            });
-        }
-      })
-      .catch((err) => {
-        res.json(err.message);
-      });
-  } else {
-    return res.status(400).json("Provide email or Phone Number");
+    }
+    catch(err){
+      return res.status(400).json("Provide email or Phone Number");
+    }
   }
-};
 
 const getAllMerchant = (req, res) => {
+  //console.log("request received:")
   Merchant.find(function (err, data) {
     if (err) {
       res.json(err.message);
@@ -238,7 +218,7 @@ const checkApprovalStatus = async (req, res) => {
     }
     res.status(200).json({ message: "merchant approved", status: "true" });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(400).json(error.message);
   }
 };
@@ -273,7 +253,7 @@ const updatePassword = async (req, res) => {
 
     return res.status(200).json("password updated successfully");
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     return res.status(400).json(error.message);
   }
 };
@@ -311,7 +291,7 @@ const resetPassword = async (req, res) => {
         `Password reset successfully, \nNew password ${newPassword} sent to ${business.phone}`
       );
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     return res.status(500).json(error.message);
   }
 };
@@ -325,7 +305,7 @@ const deleteAccount = async (req, res) => {
     }
     await existingMerchant.deleteOne();
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     return res.status(500).json(error.message);
   }
 };

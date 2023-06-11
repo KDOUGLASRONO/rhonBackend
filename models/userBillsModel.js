@@ -18,6 +18,11 @@ const user_billSchema = new Schema(
       required: true,
       default: true,
     },
+    start_date:{
+      type: Date,
+      required: true,
+      default: Date.now()
+    }
   },
   { timestamps: true }
 );

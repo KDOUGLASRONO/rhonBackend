@@ -14,6 +14,11 @@ const deductionSchema = new Schema(
       required: true,
       ref: "UserBill",
     },
+    bill:{
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Bill"
+    }
   },
   { timestamps: true }
 );

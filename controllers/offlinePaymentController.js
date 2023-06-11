@@ -5,7 +5,7 @@ const { sendSms } = require("../utilities/helpers");
 
 const validatePayment = (req, res) => {
   console.log("---------validation-------------------");
-  console.log(req.body);
+  //console.log(req.body);
 };
 
 const confirmPayment = async (req, res) => {
@@ -17,6 +17,8 @@ const confirmPayment = async (req, res) => {
   const code = req.body.TransID;
   const phone = req.body.MSISDN.replace(/\s/g, "");
   const phone1 = `0${phone.substring(3)}`;
+
+  //console.log("requested", req.body);
 
   try {
     //check for merchant account details
@@ -38,12 +40,12 @@ const confirmPayment = async (req, res) => {
     transaction.transaction_type = "MPESA-OFFLINE";
 
     const newTransaction = await transaction.save();
-    console.log(newTransaction);
+    //console.log(newTransaction);
     // console.log(msg);
     // sendSms(msg, merchant.phone);
     res.status(200).json("ok");
   } catch (error) {
-    console.log(error.message);
+    //console.log(error.message);
     res.status(200).json("ok");
   }
   //    {

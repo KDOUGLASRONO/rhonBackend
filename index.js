@@ -9,6 +9,11 @@ const morgan = require("morgan");
 const rootRouter = require("./routes/rootRouter");
 const { deductBillSavingJob } = require("./utilities/schedulers");
 
+//testing
+ const Merchants = require("./models/merchantModel");
+//testing
+
+//add admin as in env file
 const seedAdmin = require("./middlewares/seedMiddleware").addDefaultAdminUser;
 
 mongoose
@@ -36,7 +41,11 @@ app.use((req, res, next) => {
 
 app.get("/", async (req, res) => {
   res.send("You have reached rhone sytems backed");
+   const data = await Merchants.find()
+   console.log("deductions: ", data)
 });
+
+
 
 app.use("/api/v1", rootRouter);
 

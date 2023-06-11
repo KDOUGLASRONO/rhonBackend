@@ -2,7 +2,8 @@ const Merchant = require("../models/merchantModel");
 
 const checkMerchantStatus = async (req, res, next) => {
   try {
-    const approvedMerchant = await Merchant.findOne({ email: req.body.email });
+    console.log("Checking status", req.body);
+    const approvedMerchant = await Merchant.findOne({$or:[{ email: req.body.email },{phone: req.body.email}]});
 
     if (!approvedMerchant) {
       throw new Error("Merchant does not exist");

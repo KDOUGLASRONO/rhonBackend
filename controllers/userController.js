@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const signUp = async (req, res) => {
   const { email, phone, password } = req.body;
 
+  //console.log("regitration attempt", req.body);
+
   if (!email || !password || !phone) {
     return res.status(400).json("all fields are required");
   } else if (password.length < 8) {
@@ -44,6 +46,7 @@ const signUp = async (req, res) => {
 
 const signIn = (req, res) => {
   const { email, password } = req.body;
+  //console.log("admin login", req.body);
 
   User.findOne({ email: email })
     .then((user) => {

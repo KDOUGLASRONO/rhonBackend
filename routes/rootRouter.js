@@ -61,13 +61,19 @@ const {
   editBill,
   getAllBills,
   deleteBill,
+  deleteMerchantBill,
   addMerchantBill,
   getAllMerchantBills,
 } = require("../controllers/billsController");
+
+const {deductions,merchantDeduction} = require("../controllers/deductionController");
+//const deductions = require("../controllers/deductionController");
+
 //ADMIN ROUTES
 rootRouter.get("/users", protect, admin, userController.getUsers);
 // rootRouter.post("/user/register", userController.signUp);
 rootRouter.post("/user/login", userController.signIn);
+rootRouter.post("/user/register", userController.signUp);
 
 //merchant routes
 rootRouter.get("/merchants", getAllMerchant); //auth to be added
@@ -115,8 +121,16 @@ rootRouter.post("/add-bill", addBill);
 rootRouter.put("/edit-bill/:id", editBill);
 rootRouter.get("/get-all-bills", getAllBills);
 rootRouter.delete("/delete-bill/:id", deleteBill);
+rootRouter.delete("/delete-merchant-bill/:id", deleteMerchantBill);
 
-//user-bills
+//merchant-bills
 rootRouter.post("/add-merchant-bill", addMerchantBill);
 rootRouter.get("/get-merchant-bills/:id", getAllMerchantBills);
+
+//deductions routes
+rootRouter.get("/deductions", deductions);
+rootRouter.get("/deductions/:id", merchantDeduction);
+
+//rootRouter.get("/deductions/:id", deductions);
+
 module.exports = rootRouter;
