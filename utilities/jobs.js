@@ -36,8 +36,8 @@ const deductBillSaving = async () => {
 
         //console.log("current bill start date", merchantBill.start_date)
         
-       // if(merchantBill?.start_date<=new Date(new Date().getFullYear(),new Date().getMonth(), new Date().getDate())){
-         // console.log(" started")
+       if(merchantBill?.start_date<=new Date(new Date().getFullYear(),new Date().getMonth(), new Date().getDate())){
+         console.log(" started")
           //console.log(merchantBill.start_date ,"!=",new Date(new Date().getFullYear(),new Date().getMonth(), new Date().getDate()))
         
         let amount_per_day = () => {
@@ -80,7 +80,7 @@ const deductBillSaving = async () => {
         //add on total deduction
         totalDeduction = totalDeduction + amount;
         // console.log(newDeduction);
-     // }
+      }
     }
 
       //Create a saving for the user

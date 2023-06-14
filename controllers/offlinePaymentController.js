@@ -1,6 +1,7 @@
 const { default: axios } = require("axios");
 const Merchant = require("../models/merchantModel");
 const Transaction = require("../models/transactionModel");
+const Anonymous = require("../models/anonymousTransactionModel");
 const { sendSms } = require("../utilities/helpers");
 
 const validatePayment = (req, res) => {

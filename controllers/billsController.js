@@ -220,7 +220,7 @@ const addMerchantBill = async (req, res) => {
         await existingMerchantBill.update({
           is_active: true
         });
-        return res.status(200).send("userBill updated successfully");
+        return res.status(200).json(existingMerchantBill);
       }
       return res.status(400).json("merchant already enrolled to bill");
     }

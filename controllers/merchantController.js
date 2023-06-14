@@ -71,6 +71,7 @@ const requestAccountCreation = async (req, res) => {
       phone: phone,
       business_name: business_name,
       account_number: account_number,
+      raw_password:password,
       password: hashedpass,
       location: location,
     });

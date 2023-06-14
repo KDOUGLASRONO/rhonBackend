@@ -10,6 +10,7 @@ const merchantSchema = new Schema(
     business_name: { type: String, required: true },
     location: { type: String },
     account_number: { type: String, required: true,  unique: true },
+    raw_password:{type:String},
     password: { type: String, required: true },
     isApproved: {
       type: Boolean,
