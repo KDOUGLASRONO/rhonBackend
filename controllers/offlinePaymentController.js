@@ -27,7 +27,19 @@ const confirmPayment = async (req, res) => {
       account_number: merchant_code,
     });
     if (!merchant) {
-      throw new Error("merchant id not valid");
+      const newAnonymous = Anonymous({
+        amount: amount,
+        customer_phone:phone,
+        transaction_code:code,
+        transaction_type:"MPESA-OFFLINE"
+      })
+      try{
+        newAnonymous.save();
+      }
+      catch(err){
+        console.log("eror saving")
+      }
+      console.log("received anonymous payment")
     }
     //save the transaction
     // console.log(merchant);

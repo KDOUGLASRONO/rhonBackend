@@ -4,6 +4,7 @@ const Saving = require("../models/savingsModel");
 const Transaction = require("../models/transactionModel");
 const Transfer = require("../models/transferModel");
 const Withdrawal = require("../models/withdrawalModel");
+const withdrawalCost = require("../models/withdrawalCostModel")
 
 const generateCode = (length) => {
   var result = "";
@@ -108,6 +109,15 @@ const getUserBalance = async (merchant_id) => {
     total_savings = total_savings + parseInt(sv.amount);
   });
 
+  let withdrawalCosts = await withdrawalCost.find({
+    merchant:merchant_id
+  })
+  let totalWithdrawalCosts = 0;
+  totalWithdrawalCosts = withdrawalCosts?.map((cost)=>{
+    return cost.amount
+  }).reduce((a,b)=>{return parseInt(a)+parseInt(b)},0)
+  console.log("withdrawal costs", totalWithdrawalCosts)
+
   // const allDeductions = await Deduction.find({ merchant: merchant_id });
 
   // let total_deductions = 0;
@@ -123,7 +133,8 @@ const getUserBalance = async (merchant_id) => {
     pendingWidrwl -
     transfer_sent -
     // total_deductions;
-    total_savings;
+    total_savings -
+    totalWithdrawalCosts;
 
   // console.log(totalTrnx);
   return balance;

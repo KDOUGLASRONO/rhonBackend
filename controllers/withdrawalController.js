@@ -1,13 +1,30 @@
 const Merchant = require("../models/merchantModel");
 const Withdrawal = require("../models/withdrawalModel");
+const withdrawalCost = require("../models/withdrawalCostModel")
 const FailedWithdrawal = require("../models/failedWithdrawals");
 const Saving = require("../models/savingsModel");
 const axios = require("axios");
 const { getUserBalance } = require("../utilities/helpers");
 
+//transaction cost
+let transactionCost = (cash)=>{
+  if(cash<100){
+    return 0
+  }
+  else if(cash>99 && cash<500){
+    return 6
+  }
+  else if(cash>499 && cash<1000){
+    return 12
+  }
+  else{
+    return 20
+  }
+}
 //initiate withdrawal
 const initiateWithdrawal = async (req, res) => {
   const { amount, pay_to, merchant_account, initiator_phone } = req.body;
+  console.log("initiating withdraw", req.body)
 
   try {
     if (!amount || !merchant_account || !initiator_phone) {
@@ -49,16 +66,21 @@ const initiateWithdrawal = async (req, res) => {
       return res.status(400).json("You cannot withdraw less than 10 ");
     }
 
+    //transaction cost
+   
+
     let balance = await getUserBalance(existingMerchant._id);
+    console.log("balance: " + balance)
 
     if (balance < 1) {
       balance = 0;
     }
 
-    if (balance < amount) {
+    if (balance < Number(amount) + Number(transactionCost(amount))) {
+      console.log("balance2: " + balance)
       return res
         .status(400)
-        .json(`Your current balance is ${balance}. Cannot withdraw ${amount}`);
+        .json(`Your current balance is ${balance}. Cannot withdraw ${amount} must pay transaction fee of ${transactionCost(amount)}`);
     }
 
     let deduction = 20;
@@ -158,6 +180,15 @@ const handleResult = async (req, res) => {
   withdrawalToUpdate.transaction_code = trnx_code;
   withdrawalToUpdate.save();
 
+  //save to database the cost of withdrawals as revenue
+  const newWithdrawalCost = new withdrawalCost({
+    amount:transactionCost(withdrawalToUpdate.amount),
+    merchant:(withdrawalToUpdate.merchant),
+    conversation_id: req.body.Result.ConversationID,   
+  });
+
+  await newWithdrawalCost.save();
+  
   res.status(200).json("ok");
 };
 

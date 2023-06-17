@@ -86,7 +86,7 @@ rootRouter.post("/merchant/reset-pass", resetPassword);
 rootRouter.put("/merchant/update-password", protect, updatePassword);
 rootRouter.delete("/merchant/delete/:id", protect, admin, deleteAccount);
 
-//transactions routes
+//transactions/payments routes
 rootRouter.post("/pokeaujumbe", handleStkCallback);
 rootRouter.post("/pay", getAccessToken, stkpush);
 rootRouter.get("/transactions", getAllTransactions);

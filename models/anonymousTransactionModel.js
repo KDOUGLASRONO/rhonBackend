@@ -7,6 +7,7 @@ const anonymousSchema = new schema({
     customer_phone: { type: String, required: true },
     merchant: {
       type:"string",
+      required: true,
       default:"anonymous"
     },
     transaction_code: {
