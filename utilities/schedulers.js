@@ -5,7 +5,7 @@ const timezone = "Africa/Nairobi";
 
 // "*/ * * * *",
 const deductBillSavingJob = cron.schedule(
-  "* */30 * * *",
+  "* * * * *",
   async () => {
     try {
       await deductBillSaving();

@@ -198,14 +198,15 @@ const handleTimeout = (req, res) => {
 };
 //get all withdrawals
 const getAllWithdrawals = async (req, res) => {
+  console.log("got here");
   try {
     const allWithdrawals = await Withdrawal.find()
       .sort({ updatedAt: -1 })
       .populate("merchant");
 
-    allWithdrawals.forEach((w) => {
-      w.merchant.password = "##############";
-    });
+    //allWithdrawals.forEach((w) => {
+      //w.merchant.password = "##############";
+    //});
 
     res.status(200).json(allWithdrawals);
   } catch (error) {

@@ -23,9 +23,10 @@ const confirmPayment = async (req, res) => {
 
   try {
     //check for merchant account details
-    const merchant = await Merchant.findOne({
-      account_number: merchant_code,
-    });
+    const merchant = await Merchant.findOne({$or:[
+      {account_number: merchant_code},
+      {phone: merchant_code}
+    ]});
     if (!merchant) {
       const newAnonymous = Anonymous({
         amount: amount,

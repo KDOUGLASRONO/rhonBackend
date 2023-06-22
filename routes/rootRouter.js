@@ -66,7 +66,11 @@ const {
   getAllMerchantBills,
 } = require("../controllers/billsController");
 
-const {deductions,merchantDeduction} = require("../controllers/deductionController");
+const {
+  deductions,
+  merchantDeduction,
+  reverseDeductions
+} = require("../controllers/deductionController");
 //const deductions = require("../controllers/deductionController");
 
 //ADMIN ROUTES
@@ -130,6 +134,7 @@ rootRouter.get("/get-merchant-bills/:id", getAllMerchantBills);
 //deductions routes
 rootRouter.get("/deductions", deductions);
 rootRouter.get("/deductions/:id", merchantDeduction);
+rootRouter.post("/reverse-deduction/:id", reverseDeductions);
 
 //rootRouter.get("/deductions/:id", deductions);
 

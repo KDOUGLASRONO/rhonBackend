@@ -9,9 +9,9 @@ const {
 } = require("../utilities/helpers");
 
 const requestAccountCreation = async (req, res) => {
-  const { firstName, lastName, email, phone, business_name, location, password } = req.body;
+  const { firstName, lastName, id_number, email, phone, business_name, location, password } = req.body;
 
-  if(!(firstName && lastName && business_name && location && password)){
+  if(!(firstName && lastName && id_number && business_name && location && password)){
     //console.log("all fields are required")
     return res.status(400).json("all fields are required");
   }
@@ -67,6 +67,7 @@ const requestAccountCreation = async (req, res) => {
     const merchant = new Merchant({
       firstName:firstName,
       lastName:lastName,
+      id_number:id_number,
       email: email || null,
       phone: phone,
       business_name: business_name,

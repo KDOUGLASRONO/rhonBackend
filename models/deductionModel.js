@@ -14,6 +14,11 @@ const deductionSchema = new Schema(
       required: true,
       ref: "UserBill",
     },
+    status:{
+      type:String,
+      required:true,
+      default: "Active"
+    },
     bill:{
       type: mongoose.Schema.Types.ObjectId,
       required: true,
