@@ -15,7 +15,7 @@ let transactionCost = (cash)=>{
     return 6
   }
   else if(cash>499 && cash<1000){
-    return 12
+    return 8
   }
   else{
     return 20

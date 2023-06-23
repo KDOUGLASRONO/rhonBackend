@@ -3,6 +3,7 @@ const Merchant = require("../models/merchantModel");
 const UserBill = require("../models/userBillsModel");
 const deleteBillTransaction = require("../models/deleteBillTransactionModel");
 const deductions = require("../models/deductionModel");
+const { merchantDeduction } = require("./deductionController");
 
 //add bill is done by admin
 const addBill = async (req, res) => {
@@ -107,10 +108,23 @@ const deleteMerchantBill = async (req, res) => {
     const merchantDeductions = await deductions.find({
       merchant_bill: userBill_id,
       bill:merchantBill.bill._id,
+      status:"Active"
     })
 
+    //update bill status
+    try{
+      merchantDeductions.map(async(item)=>{
+        if(item.status=="Active"){
+          item.status="Deleted"
+          console.log(item.status)
+          await item.save()
+        } 
+      })
+    }
+    catch(err){
+      res.status(402).json({message:"failed to update deductions to deleted"})
+    }
     //console.log("deductions:", merchantDeductions);
-
     const totalDeducted = merchantDeductions.map((item)=>{
         return item.amount
       }).reduce((a,b)=>{
@@ -125,7 +139,7 @@ const deleteMerchantBill = async (req, res) => {
         is_active: false
       }
     )
-    console.log("updated merchnat bill", updatedMerchantBill)
+    //console.log("updated merchnat bill", updatedMerchantBill)
 
     let newDeleteBillTransaction = new deleteBillTransaction({
       merchant: merchantBill.user,

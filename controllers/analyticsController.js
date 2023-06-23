@@ -3,6 +3,7 @@ const Transaction = require("../models/transactionModel");
 const Transfer = require("../models/transferModel");
 const User = require("../models/userModel");
 const Withdrawal = require("../models/withdrawalModel");
+const Deductions = require('../models/deductionModel');
 const deleteBillTransaction = require("../models/deleteBillTransactionModel");
 const reverseDeduction = require("../models/reverseDeductionModel");
 const { getUserBalance } = require("../utilities/helpers");
@@ -77,13 +78,25 @@ const merchantSpecificData = async (req, res) => {
       (w) => (totalWithdrawn = totalWithdrawn + parseInt(w.amount))
     );
 
+    //deductions
+    const merchantDeductions = await Deductions.find({
+      merchant: id,
+      status:"Active"
+    })
+
+    const totalMerchantDeductions = merchantDeductions.map((item)=>{
+      return item.amount
+    }).reduce((a,b)=>{
+      return parseInt(a) + parseInt(b)
+    },0);
+
     //delete merchnt bill: reverses active dedcutions and reflect in balance.
     const deletedBillTransactions = await deleteBillTransaction.find({
       merchant: merchant._id
     });
 
     //console.log("deleted bill transactions:", deletedBillTransactions)
-    const deletedBillTransactionsAmount = deletedBillTransactions.map((item)=>{
+    const deletedBillTransactionsAmount = deletedBillTransactions?.map((item)=>{
       return item.activeDeductions
     }).reduce((a,b)=>{
       return parseInt(a)+ parseInt(b)
@@ -130,9 +143,12 @@ const merchantSpecificData = async (req, res) => {
       status: b_status,
       payments: totalPayed,
       withdrawn: totalWithdrawn,
-      balance,
+      balance: balance,
+      deductions: totalMerchantDeductions,
       transfers_out: transfer_sent,
       transfers_in: transfer_received,
+      reversed_deductions: totalReverseDeductions,
+      delete_bill_deductions: deletedBillTransactionsAmount
     });
   } catch (error) {
     /*console.log(error);*/

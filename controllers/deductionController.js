@@ -36,13 +36,18 @@ const merchantDeduction = async (req, res) => {
 
 }
 const reverseDeductions = async(req,res)=>{
-    console.log("got here")
+    //console.log("got here")
     const deduction_id = req.params.id
-    console.log("deduction id ", deduction_id)
+    //console.log("deduction id ", deduction_id)
     try{
         const deduction = await Deduction.findById(deduction_id)
-        deduction.status = "Reversed"
-        await deduction.save()
+        console.log("status",deduction.status)
+        
+        if(deduction.status == "Active"){
+            deduction.status = "Deleted"
+            console.log("new deduction", deduction)
+            await deduction.save()
+        }
 
         const newReverseDeduction = reverseDeduction({
             deduction: deduction_id,

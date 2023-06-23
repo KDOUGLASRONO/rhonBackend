@@ -8,6 +8,7 @@ const {
   getAllTransactions,
   getMerchantTransactions,
 } = require("../controllers/paymentController");
+
 const {
   requestAccountCreation,
   approveMerchantAccount,
