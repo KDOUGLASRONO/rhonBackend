@@ -56,7 +56,7 @@ const merchantSpecificData = async (req, res) => {
   try {
     const merchant = await Merchant.findById(id);
     if (!merchant) {
-      res.status(400).json("merchant not found");
+      return res.status(400).json("merchant not found");
     }
     const b_name = merchant.business_name;
     const b_phone = merchant.phone;
@@ -80,8 +80,12 @@ const merchantSpecificData = async (req, res) => {
 
     //deductions
     const merchantDeductions = await Deductions.find({
-      merchant: id,
-      status:"Active"
+      merchant: id
+    })
+
+    // filter deduction according to status
+    const filteredDeductions = merchantDeductions.filter((singleDeduction)=>{
+      return singleDeduction.status = "Active" || singleDeduction;
     })
 
     const totalMerchantDeductions = merchantDeductions.map((item)=>{

@@ -53,5 +53,5 @@ app.listen(port, () => {
   console.log(`app is running at port: ${port}`);
 
   //start jobs after server runs
-  deductBillSavingJob.start();
+  // deductBillSavingJob.start();
 });

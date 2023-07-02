@@ -7,7 +7,7 @@ const merchantSchema = new Schema(
     lastName:{type: String, required: true},
     id_number:{type: String, required: true},
     email: { type: String},
-    phone: { type: String, required: true, unique: true },
+    phone: { type: String, required: true},
     business_name: { type: String, required: true },
     location: { type: String },
     account_number: { type: String, required: true,  unique: true },
