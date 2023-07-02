@@ -7,6 +7,7 @@ const Deductions = require('../models/deductionModel');
 const deleteBillTransaction = require("../models/deleteBillTransactionModel");
 const reverseDeduction = require("../models/reverseDeductionModel");
 const { getUserBalance } = require("../utilities/helpers");
+const mongoose = require("mongoose");
 
 //all merchants
 //all pending registrations
@@ -48,15 +49,17 @@ const getAnalytics = async (req, res) => {
 };
 
 const merchantSpecificData = async (req, res) => {
+ 
   const id = req.params.id;
-  /*console.log("id", id);*/
+  console.log("id", id);
 
   //name , phone , email , status
   //total withdrawn , total transacted , total transfers in , total transafers out ,balance
   try {
     const merchant = await Merchant.findById(id);
+    console.log("merchant", merchant)
     if (!merchant) {
-      res.status(400).json("merchant not found");
+      return res.status(400).json("merchant not found");
     }
     const b_name = merchant.business_name;
     const b_phone = merchant.phone;
@@ -64,7 +67,11 @@ const merchantSpecificData = async (req, res) => {
     const b_status = merchant.isApproved;
 
     // transaction
-    const payments = await Transaction.find({ merchant: merchant._id });
+    const payments = await Transaction.find({
+      merchant: merchant._id
+    });
+    console.log("payments: "+ payments.length)
+  
     let totalPayed = 0;
     payments.forEach((p) => (totalPayed = totalPayed + parseInt(p.amount)));
 
@@ -73,6 +80,7 @@ const merchantSpecificData = async (req, res) => {
       status: "Complete",
       merchant: merchant._id,
     });
+    console.log("withdrawals: " + withdrawals.length)
     let totalWithdrawn = 0;
     withdrawals.forEach(
       (w) => (totalWithdrawn = totalWithdrawn + parseInt(w.amount))
@@ -83,8 +91,17 @@ const merchantSpecificData = async (req, res) => {
       merchant: id,
       status:"Active"
     })
+    //to reverse deleted bills
+    /*
+    merchantDeductions.map(async(deduction)=>{
+      deduction.status = "Active"
+      await deduction.save();
+    })
+    */
 
-    const totalMerchantDeductions = merchantDeductions.map((item)=>{
+    console.log("deductions: ", merchantDeductions.length)
+
+    const totalMerchantDeductions = merchantDeductions?.map((item)=>{
       return item.amount
     }).reduce((a,b)=>{
       return parseInt(a) + parseInt(b)
@@ -115,7 +132,9 @@ const merchantSpecificData = async (req, res) => {
       return parseInt(a) + parseInt(b)
     },0)
     console.log("amount deductions: ", totalReverseDeductions);
-    const balance = await getUserBalance(merchant._id) + deletedBillTransactionsAmount + totalReverseDeductions;
+    const balance = await getUserBalance(merchant._id);
+
+    console.log("balance: ", balance)
 
     let transfer_sent = 0;
     let transfer_received = 0;
@@ -144,15 +163,15 @@ const merchantSpecificData = async (req, res) => {
       payments: totalPayed,
       withdrawn: totalWithdrawn,
       balance: balance,
-      deductions: totalMerchantDeductions,
+      activeDeductions: totalMerchantDeductions,
       transfers_out: transfer_sent,
       transfers_in: transfer_received,
       reversed_deductions: totalReverseDeductions,
       delete_bill_deductions: deletedBillTransactionsAmount
     });
   } catch (error) {
-    /*console.log(error);*/
-    //res.json(error.message);
+    console.log(error);
+    res.json(error.message);
   }
 };
 

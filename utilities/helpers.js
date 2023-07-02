@@ -1,5 +1,5 @@
-const Deduction = require("../models/deductionModel");
 const Merchant = require("../models/merchantModel");
+const Deduction = require("../models/deductionModel");
 const Saving = require("../models/savingsModel");
 const Transaction = require("../models/transactionModel");
 const Transfer = require("../models/transferModel");
@@ -62,6 +62,7 @@ const getUserBalance = async (merchant_id) => {
     totalTrnx = totalTrnx + parseInt(t.amount);
   });
 
+  console.log("totalTrnx: " + totalTrnx);
   //find total withdrawals
   let completeWidrwl = 0;
   let pendingWidrwl = 0;
@@ -82,6 +83,7 @@ const getUserBalance = async (merchant_id) => {
     }
   });
 
+  console.log(completeWidrwl, pendingWidrwl, failedWidrwl)
   let transfer_sent = 0;
   let transfer_received = 0;
 
@@ -102,12 +104,19 @@ const getUserBalance = async (merchant_id) => {
   });
 
   //all savings
-  const allSavings = await Saving.find({ merchant: merchant_id });
+  //const allSavings = await Saving.find({ merchant: merchant_id });
+  //all deductions
+  const allDeductions = await Deduction.find({merchant: merchant_id});
+  let totalDeductions = 0;
 
-  let total_savings = 0;
-  allSavings.forEach((sv) => {
-    total_savings = total_savings + parseInt(sv.amount);
-  });
+  totalDeductions = allDeductions.map((d)=>{
+    if(d.status!="Deleted"){
+      return d.amount
+    }
+    else{
+      return 0;
+    }        
+  }).reduce((a,b)=>{return parseInt(a) + parseInt(b)},totalDeductions);
 
   let withdrawalCosts = await withdrawalCost.find({
     merchant:merchant_id
@@ -132,9 +141,10 @@ const getUserBalance = async (merchant_id) => {
     completeWidrwl -
     pendingWidrwl -
     transfer_sent -
-    // total_deductions;
-    total_savings -
+    totalDeductions -
     totalWithdrawalCosts;
+
+    console.log("hellper balance: " + balance);
 
   // console.log(totalTrnx);
   return balance;

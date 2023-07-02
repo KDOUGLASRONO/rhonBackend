@@ -1,6 +1,7 @@
 const { response } = require("express")
 const Deduction = require("../models/deductionModel")
 const Merchant = require("../models/merchantModel")
+const mongoose = require("mongoose");
 const reverseDeduction = require("../models/reverseDeductionModel");
 
 const deductions = async (req,res)=>{
@@ -38,29 +39,48 @@ const merchantDeduction = async (req, res) => {
 const reverseDeductions = async(req,res)=>{
     //console.log("got here")
     const deduction_id = req.params.id
-    //console.log("deduction id ", deduction_id)
+    console.log("deduction id ", deduction_id)
+     const session = await mongoose.startSession()
+
     try{
+      
         const deduction = await Deduction.findById(deduction_id)
         console.log("status",deduction.status)
-        
-        if(deduction.status == "Active"){
-            deduction.status = "Deleted"
-            console.log("new deduction", deduction)
-            await deduction.save()
+        if(deduction.status!="Active"){
+            return res.status(400).send({message:"deduction not active"});
         }
+        
+        //acid
 
-        const newReverseDeduction = reverseDeduction({
-            deduction: deduction_id,
-            merchant: deduction.merchant,
-            amount: deduction.amount,
+        await session.withTransaction(async()=>{
+            const opts = {session}
+
+            if(deduction.status == "Active"){
+                deduction.status = "Deleted"
+                await deduction.save(opts)
+            }
+               
+
+            const newReverseDeduction = reverseDeduction({
+                deduction: deduction_id,
+                merchant: deduction.merchant,
+                amount: deduction.amount,
+            })
+            await newReverseDeduction.save(opts);
+            console.log("reversal was successful");
+
         })
-
-        await newReverseDeduction.save()
-        res.status(200).json({message:"success"});
+        //acid
     }
     catch(error){
-        res.json(error)
+        console.log(error)
+        return res.status(400).send({message:"failed to reverse bill"})
     }
+    finally{
+         session.endSession();
+
+    }
+    res.status(200).send({message: 'reversal was successful'});
 }
 module.exports = {
     deductions,

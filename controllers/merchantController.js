@@ -137,7 +137,7 @@ const merchantLogin = (req, res) => {
     Merchant.findOne({$or:[{ email: email },{phone:email}]})
       .then((user) => {
         if (user == null) {
-          res.status(400).json({ message: "merchant not found" });
+          return res.status(400).json({ message: "merchant not found" });
         } else {
           bcrypt
             .compare(password, user.password)

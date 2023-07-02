@@ -51,7 +51,7 @@ const signIn = (req, res) => {
   User.findOne({ email: email })
     .then((user) => {
       if (user == null) {
-        res.status(400).json({ message: "user not found" });
+        return res.status(400).json({ message: "user not found" });
       } else {
         bcrypt
           .compare(password, user.password)
@@ -67,7 +67,7 @@ const signIn = (req, res) => {
                 token: token,
               });
             } else {
-              res.status(400).json("invalid password");
+             return res.status(400).json("invalid password");
             }
           })
           .catch((error) => {

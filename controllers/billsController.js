@@ -3,6 +3,7 @@ const Merchant = require("../models/merchantModel");
 const UserBill = require("../models/userBillsModel");
 const deleteBillTransaction = require("../models/deleteBillTransactionModel");
 const deductions = require("../models/deductionModel");
+const mongoose = require("mongoose");
 const { merchantDeduction } = require("./deductionController");
 
 //add bill is done by admin
@@ -99,105 +100,75 @@ const deleteBill = async (req, res) => {
 
 //delete merchant bill by admin
 const deleteMerchantBill = async (req, res) => {
+
   const userBill_id = req.params.id;
   console.log("userBill_id: " + userBill_id);
-
+  //acid
+  const session = await mongoose.startSession();
   try{
     const merchantBill = await UserBill.findById(userBill_id).populate("bill");
+    if(!merchantBill) {
+      return res.statsu(400).send({message:"merchantBill not found"})
+    }
 
-    const merchantDeductions = await deductions.find({
-      merchant_bill: userBill_id,
-      bill:merchantBill.bill._id,
-      status:"Active"
-    })
+    //deductions assoiated with that merchnatBill
+    const merchantBillDeductions = await deductions.find({merchant_bill:userBill_id,status:"Active"})
 
-    //update bill status
-    try{
-      merchantDeductions.map(async(item)=>{
-        if(item.status=="Active"){
-          item.status="Deleted"
-          console.log(item.status)
-          await item.save()
-        } 
+    const totalDeductions = merchantBillDeductions?.map((singleMerchantBillDeduction)=>{
+      return singleMerchantBillDeduction.amount
+    }).reduce((a,b)=>{return parseInt(a) + parseInt(b)},0)
+    
+    console.log("Total Deductions", totalDeductions);
+
+    await session.withTransaction( async()=>{
+      const opts = {session}
+      //update deductions
+     
+      await deductions.updateMany({merchant_bill:userBill_id,status:"Active"},{status:"Deleted"},opts);
+      //update userBill(mercnat bill to isaCTIVE: FALSE)
+      merchantBill.is_active = false;
+      await merchantBill.save(opts);
+
+      //delete bll transaction schema
+      let newDeleteBillTransaction = new deleteBillTransaction({
+        merchant: merchantBill.merchant,
+        userBill: merchantBill._id,
+        bill: merchantBill.bill._id,
+        totalDeducted:totalDeductions,
+        activeDeductions:totalDeductions
       })
-    }
-    catch(err){
-      res.status(402).json({message:"failed to update deductions to deleted"})
-    }
-    //console.log("deductions:", merchantDeductions);
-    const totalDeducted = merchantDeductions.map((item)=>{
-        return item.amount
-      }).reduce((a,b)=>{
-        return parseInt(a) + parseInt(b)
-      },0)
 
-      console.log("total deducted amount:", totalDeducted)
-
-    //update userBill
-    const updatedMerchantBill = await merchantBill.update(
-      {
-        is_active: false
-      }
-    )
-    //console.log("updated merchnat bill", updatedMerchantBill)
-
-    let newDeleteBillTransaction = new deleteBillTransaction({
-      merchant: merchantBill.user,
-      userBill: merchantBill._id,
-      bill: merchantBill.bill._id,
-      totalDeducted:totalDeducted,
-      activeDeductions:totalDeducted
-    })
-
-    if(updatedMerchantBill.acknowledged){
-      console.log("updated, acknowledged")
       const existingDeletedUserBill = await deleteBillTransaction.findOne({
         userBill:userBill_id
       })
+
       if(existingDeletedUserBill){
-        console.log("existing deleted bill found")
-        try{
-          await existingDeletedUserBill.update({
-            totalDeducted: totalDeducted,
-            activeDeductions:totalDeducted
-          })
-          console.log("done updating")
-          return res.status(200).json(existingDeletedUserBill)
-        }
-        catch(error){
-          return res.status(404).send({message: "error updating deletedbill"});
-        }
+        existingDeletedUserBill.totalDeducted = totalDeductions;
+        existingDeletedUserBill.activeDeductions = totalDeductions
+
+        await existingDeletedUserBill.save(opts);
       }
       else{
-        try{
-          await newDeleteBillTransaction.save()
-        }
-        catch(error){
-          res.status(404).json(error);
-        }
-
+        await newDeleteBillTransaction.save(opts);
       }
-   
-    }
-    else{
-      response.status(404).json({message:"failed to delete merchant bill"})
-    }
+      console.log("merchnat bill successfully updated")
+    })
+    res.status(200).send({message: "Successfully updated"})
   }
-  catch(err){
-    res.status(404).json(err)
+  catch(error){
+    console.log(error)
+    res.status(400).send({message: "Error updating"})
   }
-  //console.log("newDeleteBillTransaction: " + newDeleteBillTransaction);
- //await newDeleteBillTransaction.save();
-
-  //console.log("merchantBill_id: " + merchantBill)
-
-  res.status(200).send({ message:`id received ${userBill_id}` });
+  finally{
+    session.endSession();
+  }
+  //acid
 }
 
 //merchant bills
 const addMerchantBill = async (req, res) => {
   const { merchant_id, bill_id, start_date } = req.body;
-  //console.log("adding bills", req.body)
+  console.log("adding bills", req.body)
 
   const getStartDate =()=>{
     if(new Date().getDate()<6 && new Date().getDate()>0){
@@ -239,15 +210,15 @@ const addMerchantBill = async (req, res) => {
       return res.status(400).json("merchant already enrolled to bill");
     }
     const userbill = new UserBill();
-    userbill.user = merchant_id;
+    userbill.merchant = merchant_id;
     userbill.bill = bill_id;
     userbill.start_date = (!start_date)? getStartDate(): start_date;
 
     const newUserBill = await (
-      await (await userbill.save()).populate("user")
+      await (await userbill.save()).populate("merchant")
     ).populate("bill");
 
-    newUserBill.user.password = "###########";
+    newUserBill.merchant.password = "###########";
     res.status(200).json(newUserBill);
   } catch (error) {
     //console.log(error);
@@ -257,18 +228,18 @@ const addMerchantBill = async (req, res) => {
 
 const getAllMerchantBills = async (req, res) => {
   const merchant_id = req.params.id;
-  //console.log("id: " + merchant_id)
+  console.log("id: " + merchant_id)
 
   try {
     const bills = await UserBill.find({
-      user: merchant_id,
+      merchant: merchant_id,
       is_active: true,
     })
-      .populate("user")
+      .populate("merchant")
       .populate("bill");
 
     bills.forEach((b) => {
-      b.user.password = "########";
+      b.merchant.password = "########";
     });
     //console.log("found user",bills)
     res.status(200).json(bills);

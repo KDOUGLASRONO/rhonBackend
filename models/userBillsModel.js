@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const user_billSchema = new Schema(
   {
-    user: {
+    merchant: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Merchant",

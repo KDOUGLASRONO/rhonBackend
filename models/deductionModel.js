@@ -21,7 +21,6 @@ const deductionSchema = new Schema(
     },
     bill:{
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
       ref: "Bill"
     }
   },

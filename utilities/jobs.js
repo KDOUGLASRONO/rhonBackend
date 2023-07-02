@@ -3,6 +3,7 @@ const Deduction = require("../models/deductionModel");
 const Merchant = require("../models/merchantModel");
 const Saving = require("../models/savingsModel");
 const UserBill = require("../models/userBillsModel");
+const {dailyDeductions} = require("./helpers")
 
 function finalAmount(amount){
   if(amount<100){
@@ -28,7 +29,7 @@ const deductBillSaving = async () => {
       let totalDeduction = 0;
       //find merchant bills
       const merchantBills = await UserBill.find({
-        user: merchant._id,
+        merchant: merchant._id,
         is_active: true,
       }).populate("bill"); 
 
@@ -36,7 +37,7 @@ const deductBillSaving = async () => {
 
         //console.log("current bill start date", merchantBill.start_date)
         
-       if(merchantBill?.start_date<=new Date(new Date().getFullYear(),new Date().getMonth(), new Date().getDate())){
+       if(merchantBill?.start_date>=new Date(new Date().getFullYear(),new Date().getMonth(), new Date().getDate())){
          console.log(" started")
           //console.log(merchantBill.start_date ,"!=",new Date(new Date().getFullYear(),new Date().getMonth(), new Date().getDate()))
         
@@ -66,6 +67,7 @@ const deductBillSaving = async () => {
           }         
         };
 
+
         const amount = Math.ceil(amount_per_day());
         const deduction = new Deduction();
         deduction.merchant = merchant._id;
@@ -74,22 +76,15 @@ const deductBillSaving = async () => {
         deduction.amount = amount.toString();
         const newDeduction = await deduction.save();
         console.log("deductions on")
-      
 
         //create a new saving with the total deductions
         //add on total deduction
-        totalDeduction = totalDeduction + amount;
+        //totalDeduction = totalDeduction + amount;
         // console.log(newDeduction);
       }
     }
 
       //Create a saving for the user
-      if (totalDeduction >= 1) {
-        const saving = new Saving();
-        saving.merchant = merchant._id;
-        saving.amount = totalDeduction.toString();
-        await saving.save();
-      }
     }
   } catch (error) {
     // Handle the error here
