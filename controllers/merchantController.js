@@ -262,6 +262,7 @@ const updatePassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   const { business_name } = req.body;
+  console.log("business_name",req.body)
   try {
     const business = await Merchant.findOne({ business_name: business_name });
 

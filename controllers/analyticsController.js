@@ -51,13 +51,13 @@ const getAnalytics = async (req, res) => {
 const merchantSpecificData = async (req, res) => {
  
   const id = req.params.id;
-  console.log("id", id);
+  //console.log("id", id);
 
   //name , phone , email , status
   //total withdrawn , total transacted , total transfers in , total transafers out ,balance
   try {
     const merchant = await Merchant.findById(id);
-    console.log("merchant", merchant)
+    //console.log("merchant", merchant)
     if (!merchant) {
       return res.status(400).json("merchant not found");
     }
@@ -70,7 +70,7 @@ const merchantSpecificData = async (req, res) => {
     const payments = await Transaction.find({
       merchant: merchant._id
     });
-    console.log("payments: "+ payments.length)
+    //console.log("payments: "+ payments.length)
   
     let totalPayed = 0;
     payments.forEach((p) => (totalPayed = totalPayed + parseInt(p.amount)));
@@ -80,7 +80,7 @@ const merchantSpecificData = async (req, res) => {
       status: "Complete",
       merchant: merchant._id,
     });
-    console.log("withdrawals: " + withdrawals.length)
+    //console.log("withdrawals: " + withdrawals.length)
     let totalWithdrawn = 0;
     withdrawals.forEach(
       (w) => (totalWithdrawn = totalWithdrawn + parseInt(w.amount))
@@ -99,7 +99,7 @@ const merchantSpecificData = async (req, res) => {
     })
     */
 
-    console.log("deductions: ", merchantDeductions.length)
+    //console.log("deductions: ", merchantDeductions.length)
 
     const totalMerchantDeductions = merchantDeductions?.map((item)=>{
       return item.amount
@@ -125,16 +125,16 @@ const merchantSpecificData = async (req, res) => {
     const merchantReverseDeductions = await reverseDeduction.find({
       merchant: id
     })
-    console.log("deduction found")
+    //console.log("deduction found")
     const totalReverseDeductions = merchantReverseDeductions.map((item)=>{
       return item.amount
     }).reduce((a,b)=>{
       return parseInt(a) + parseInt(b)
     },0)
-    console.log("amount deductions: ", totalReverseDeductions);
+    //console.log("amount deductions: ", totalReverseDeductions);
     const balance = await getUserBalance(merchant._id);
 
-    console.log("balance: ", balance)
+    //console.log("balance: ", balance)
 
     let transfer_sent = 0;
     let transfer_received = 0;
@@ -170,7 +170,7 @@ const merchantSpecificData = async (req, res) => {
       delete_bill_deductions: deletedBillTransactionsAmount
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.json(error.message);
   }
 };

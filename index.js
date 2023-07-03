@@ -8,14 +8,14 @@ const mongoose = require("mongoose");
 const morgan = require("morgan");
 const rootRouter = require("./routes/rootRouter");
 const { deductBillSavingJob } = require("./utilities/schedulers");
-const allSavings = require("./savings")
-const Saving = require("./models/savingsModel")
+//const allDeductions = require("./deduction")
+//const Deduction = require("./models/deductionModel")
 
 //testing
 
 //connect to database
 mongoose
-  .connect(process.env.MONGO_URL_ONLINE)
+  .connect(process.env.MONGO_URI_RHONPESA)
   .then(() => console.log("connected to db successfully"))
   .catch((err) => console.log(err));
 
@@ -23,22 +23,23 @@ mongoose
 
 
 const  copydata =()=>{
-  console.log("all Merchants", allSavings)
-  allSavings.map(async(saving)=>{
+  //console.log("all Merchants", allMerchants)
+ allDeductions.map(async(deduction)=>{
 
-    const newSaving = new Saving({
-      _id:saving._id,
-      merchant:saving.merchant,
-      amount:saving.amount,
-      createdAt:saving.createdAt,
-      updatedAt:saving.updatedAt,
+    const newDeduction = new Deduction({
+      _id:deduction._id,
+      amount:deduction.amount,
+      merchant:deduction.merchant,
+      merchant_bill:deduction.merchant_bill,
+      createdAt:deduction.createdAt,
+      updatedAt:deduction.updatedAt,
       __v: 0
     })
-       await newSaving.save();
+       await newDeduction.save();
 
   })
 }
-/*copydata()*/
+//copydata()
 
 //add admin as in env file
 const seedAdmin = require("./middlewares/seedMiddleware").addDefaultAdminUser;
